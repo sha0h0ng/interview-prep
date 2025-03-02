@@ -1,3 +1,4 @@
+// src/components/KeyboardNavigation.jsx
 import { useEffect, useCallback, useState } from 'react';
 import { Modal, Table, Badge } from 'react-bootstrap';
 
@@ -17,6 +18,13 @@ function KeyboardNavigation({
 
   const handleKeyDown = useCallback(
     (e) => {
+      // Ctrl+F for search (common browser shortcut)
+      if (e.ctrlKey && e.key === 'f') {
+        e.preventDefault();
+        onFocusSearch();
+        return;
+      }
+
       // Don't capture keyboard events when user is typing in an input
       if (
         e.target.tagName === 'INPUT' ||
@@ -170,7 +178,7 @@ function KeyboardNavigation({
               </tr>
               <tr>
                 <td>
-                  <kbd>/</kbd>
+                  <kbd>/</kbd> or <kbd>Ctrl</kbd>+<kbd>F</kbd>
                 </td>
                 <td>Focus the search box</td>
               </tr>
