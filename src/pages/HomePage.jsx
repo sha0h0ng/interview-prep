@@ -1,12 +1,20 @@
 // src/pages/HomePage.jsx
 import { useState, useEffect } from 'react';
-import { Form, InputGroup, Badge, Button } from 'react-bootstrap';
+import {
+  Form,
+  InputGroup,
+  Badge,
+  Button,
+  Dropdown,
+  Stack,
+} from 'react-bootstrap';
 import QuestionList from '../components/QuestionList';
 
 function HomePage({ questions, getQuestion }) {
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedTags, setSelectedTags] = useState([]);
   const [availableTags, setAvailableTags] = useState([]);
+  const [sortOption, setSortOption] = useState('answersFirst');
 
   // Extract all unique tags from questions
   useEffect(() => {
@@ -35,6 +43,54 @@ function HomePage({ questions, getQuestion }) {
     return matchesSearch && matchesTags;
   });
 
+  // Helper function to check if a question has an answer
+  const hasAnswer = (question) => {
+    if (question.linkedAnswerId) {
+      const linkedQuestion = getQuestion(question.linkedAnswerId);
+      return (
+        linkedQuestion &&
+        linkedQuestion.content &&
+        linkedQuestion.content.trim().length > 0
+      );
+    }
+    return question.content && question.content.trim().length > 0;
+  };
+
+  // Sort questions based on the selected option
+  const sortedQuestions = [...filteredQuestions].sort((a, b) => {
+    switch (sortOption) {
+      case 'answersFirst':
+        // Questions with answers come first
+        const aHasAnswer = hasAnswer(a);
+        const bHasAnswer = hasAnswer(b);
+        if (aHasAnswer && !bHasAnswer) return -1;
+        if (!aHasAnswer && bHasAnswer) return 1;
+        // If both have or don't have answers, sort by created date (newest first)
+        return new Date(b.createdAt) - new Date(a.createdAt);
+
+      case 'newest':
+        // Sort by created date, newest first
+        return new Date(b.createdAt) - new Date(a.createdAt);
+
+      case 'oldest':
+        // Sort by created date, oldest first
+        return new Date(a.createdAt) - new Date(b.createdAt);
+
+      case 'lastUpdated':
+        // Sort by updated date if available, otherwise created date (newest first)
+        const aDate = a.updatedAt
+          ? new Date(a.updatedAt)
+          : new Date(a.createdAt);
+        const bDate = b.updatedAt
+          ? new Date(b.updatedAt)
+          : new Date(b.createdAt);
+        return bDate - aDate;
+
+      default:
+        return 0;
+    }
+  });
+
   // Toggle tag selection
   const toggleTag = (tag) => {
     if (selectedTags.includes(tag)) {
@@ -53,13 +109,50 @@ function HomePage({ questions, getQuestion }) {
     <div>
       <h1 className='mb-4'>Interview Questions</h1>
 
-      <InputGroup className='mb-3'>
-        <Form.Control
-          placeholder='Search questions...'
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-        />
-      </InputGroup>
+      <Stack direction='horizontal' gap={3} className='mb-4'>
+        <InputGroup>
+          <Form.Control
+            placeholder='Search questions...'
+            value={searchTerm}
+            onChange={(e) => setSearchTerm(e.target.value)}
+          />
+        </InputGroup>
+
+        <Dropdown align='end'>
+          <Dropdown.Toggle variant='outline-secondary' id='dropdown-sort'>
+            {sortOption === 'answersFirst' && 'Answers First'}
+            {sortOption === 'newest' && 'Newest First'}
+            {sortOption === 'oldest' && 'Oldest First'}
+            {sortOption === 'lastUpdated' && 'Last Updated'}
+          </Dropdown.Toggle>
+          <Dropdown.Menu>
+            <Dropdown.Item
+              active={sortOption === 'answersFirst'}
+              onClick={() => setSortOption('answersFirst')}
+            >
+              Answers First
+            </Dropdown.Item>
+            <Dropdown.Item
+              active={sortOption === 'newest'}
+              onClick={() => setSortOption('newest')}
+            >
+              Newest First
+            </Dropdown.Item>
+            <Dropdown.Item
+              active={sortOption === 'oldest'}
+              onClick={() => setSortOption('oldest')}
+            >
+              Oldest First
+            </Dropdown.Item>
+            <Dropdown.Item
+              active={sortOption === 'lastUpdated'}
+              onClick={() => setSortOption('lastUpdated')}
+            >
+              Last Updated
+            </Dropdown.Item>
+          </Dropdown.Menu>
+        </Dropdown>
+      </Stack>
 
       {availableTags.length > 0 && (
         <div className='mb-4'>
@@ -95,7 +188,7 @@ function HomePage({ questions, getQuestion }) {
         </div>
       )}
 
-      <QuestionList questions={filteredQuestions} getQuestion={getQuestion} />
+      <QuestionList questions={sortedQuestions} getQuestion={getQuestion} />
     </div>
   );
 }
