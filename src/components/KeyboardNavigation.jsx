@@ -1,4 +1,3 @@
-// src/components/KeyboardNavigation.jsx
 import { useEffect, useCallback, useState } from 'react';
 import { Modal, Table, Badge } from 'react-bootstrap';
 
@@ -13,6 +12,7 @@ function KeyboardNavigation({
   onChangeSort,
   onHelpToggle,
   totalQuestions,
+  searchInputRef,
 }) {
   const [showHelp, setShowHelp] = useState(false);
 
@@ -25,7 +25,54 @@ function KeyboardNavigation({
         return;
       }
 
-      // Don't capture keyboard events when user is typing in an input
+      // Special handling for when in search box
+      if (
+        document.activeElement === searchInputRef.current ||
+        (document.activeElement &&
+          document.activeElement.getAttribute('placeholder') ===
+            'Search questions...')
+      ) {
+        // Enter, Down Arrow, or Tab+Shift keys in search box - jump to first question
+        if (
+          (e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'Tab') &&
+          !e.shiftKey
+        ) {
+          e.preventDefault();
+
+          // Jump to first question if there are questions
+          if (totalQuestions > 0) {
+            setActiveIndex(0);
+            questionRefs.current[0]?.focus();
+            questionRefs.current[0]?.scrollIntoView({
+              behavior: 'smooth',
+              block: 'nearest',
+            });
+          }
+          return;
+        }
+
+        // Escape in search box - clear search and jump to first question
+        if (e.key === 'Escape') {
+          onClearFilters();
+          if (totalQuestions > 0) {
+            setActiveIndex(0);
+            questionRefs.current[0]?.focus();
+          }
+          return;
+        }
+
+        // Allow '?' for help dialog even in search box
+        if (e.key === '?' && e.shiftKey) {
+          e.preventDefault();
+          setShowHelp(true);
+          return;
+        }
+
+        // Let other keypresses be handled normally in the search box
+        return;
+      }
+
+      // Don't capture keyboard events when user is typing in other inputs
       if (
         e.target.tagName === 'INPUT' ||
         e.target.tagName === 'TEXTAREA' ||
@@ -63,6 +110,9 @@ function KeyboardNavigation({
               behavior: 'smooth',
               block: 'nearest',
             });
+          } else {
+            // If at the first question, go back to search box
+            onFocusSearch();
           }
           break;
 
@@ -121,6 +171,7 @@ function KeyboardNavigation({
       onFocusSearch,
       onClearFilters,
       onChangeSort,
+      searchInputRef,
     ]
   );
 
@@ -162,7 +213,10 @@ function KeyboardNavigation({
                 <td>
                   <kbd>k</kbd> or <kbd>↑</kbd>
                 </td>
-                <td>Move to previous question</td>
+                <td>
+                  Move to previous question (or to search box if at first
+                  question)
+                </td>
               </tr>
               <tr>
                 <td>
@@ -184,6 +238,12 @@ function KeyboardNavigation({
               </tr>
               <tr>
                 <td>
+                  <kbd>Enter</kbd> or <kbd>↓</kbd> (in search box)
+                </td>
+                <td>Jump from search to the first question</td>
+              </tr>
+              <tr>
+                <td>
                   <kbd>Esc</kbd>
                 </td>
                 <td>Clear all filters</td>
@@ -202,10 +262,15 @@ function KeyboardNavigation({
               </tr>
             </tbody>
           </Table>
-          <div className='d-flex justify-content-center mt-3'>
-            <Badge bg='secondary'>
-              Tip: You can combine shortcuts for faster workflow
+          <div className='d-flex flex-column align-items-center mt-3'>
+            <Badge bg='info' className='mb-2'>
+              Search Workflow Tip
             </Badge>
+            <small className='text-center'>
+              <kbd>Ctrl</kbd>+<kbd>F</kbd> → type search → <kbd>Enter</kbd> →
+              navigate with <kbd>↓</kbd>/<kbd>↑</kbd> → <kbd>Enter</kbd> to view
+              answer
+            </small>
           </div>
         </Modal.Body>
       </Modal>

@@ -4,11 +4,10 @@ import QuestionItem from './QuestionItem';
 import KeyboardNavigation from './KeyboardNavigation';
 import { useNavigate } from 'react-router-dom';
 
-function QuestionList({ questions, getQuestion }) {
+function QuestionList({ questions, getQuestion, searchInputRef }) {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [expandedStates, setExpandedStates] = useState({});
   const questionRefs = useRef({});
-  const searchInputRef = useRef(null);
   const sortButtonRef = useRef(null);
   const navigate = useNavigate();
 
@@ -46,7 +45,12 @@ function QuestionList({ questions, getQuestion }) {
 
   // Handle focusing search bar
   const handleFocusSearch = () => {
-    // Get the search input from the document since it's not a direct child
+    if (searchInputRef && searchInputRef.current) {
+      searchInputRef.current.focus();
+      return;
+    }
+
+    // Fallback: Get the search input from the document since it's not a direct child
     const searchInput = document.querySelector(
       'input[placeholder="Search questions..."]'
     );
@@ -117,6 +121,7 @@ function QuestionList({ questions, getQuestion }) {
         onChangeSort={handleChangeSort}
         onHelpToggle={handleHelpToggle}
         totalQuestions={questions.length}
+        searchInputRef={searchInputRef}
       />
 
       <style jsx>{`
