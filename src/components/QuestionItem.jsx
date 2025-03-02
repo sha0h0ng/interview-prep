@@ -1,11 +1,14 @@
-// src/components/QuestionItem.jsx
-import { useState } from 'react';
-import { Card, Button, Alert, Badge } from 'react-bootstrap';
 import { useNavigate } from 'react-router-dom';
+import { Card, Button, Alert, Badge } from 'react-bootstrap';
 import ReactMarkdown from 'react-markdown';
 
-function QuestionItem({ question, getQuestion }) {
-  const [expanded, setExpanded] = useState(false);
+function QuestionItem({
+  question,
+  getQuestion,
+  isExpanded = false,
+  onToggleExpand,
+  isActive = false,
+}) {
   const navigate = useNavigate();
 
   const handleEdit = () => {
@@ -40,11 +43,14 @@ function QuestionItem({ question, getQuestion }) {
   const hasTags = question.tags && question.tags.length > 0;
 
   return (
-    <Card className='mb-3'>
+    <Card className={`mb-3 ${isActive ? 'border-primary' : ''}`}>
       <Card.Header>
         <div className='d-flex justify-content-between align-items-center'>
           <div>
-            <h5 className='mb-0'>{question.title}</h5>
+            <h5 className='mb-0'>
+              {isActive && <span className='text-primary me-2'>▶</span>}
+              {question.title}
+            </h5>
             <div className='mt-1 d-flex flex-wrap align-items-center'>
               {!hasAnswer && (
                 <Badge bg='warning' className='me-2'>
@@ -69,9 +75,22 @@ function QuestionItem({ question, getQuestion }) {
                 ))}
             </div>
           </div>
-          <Button variant='outline-secondary' size='sm' onClick={handleEdit}>
-            Edit
-          </Button>
+          <div className='d-flex align-items-center'>
+            {isActive && (
+              <small className='text-muted me-2'>
+                <kbd>e</kbd> to edit
+                {hasAnswer && (
+                  <span>
+                    {' '}
+                    | <kbd>Enter</kbd> to view
+                  </span>
+                )}
+              </small>
+            )}
+            <Button variant='outline-secondary' size='sm' onClick={handleEdit}>
+              Edit
+            </Button>
+          </div>
         </div>
       </Card.Header>
       <Card.Body>
@@ -88,14 +107,14 @@ function QuestionItem({ question, getQuestion }) {
           <Button
             variant='outline-primary'
             size='sm'
-            onClick={() => setExpanded(!expanded)}
+            onClick={onToggleExpand}
             disabled={!hasAnswer}
           >
-            {expanded ? 'Hide Answer' : 'Show Answer'}
+            {isExpanded ? 'Hide Answer' : 'Show Answer'}
           </Button>
         </div>
 
-        {expanded && hasAnswer && (
+        {isExpanded && hasAnswer && (
           <div className='mt-3'>
             {isLinked && (
               <Alert variant='info' className='mb-2'>
@@ -111,7 +130,7 @@ function QuestionItem({ question, getQuestion }) {
           </div>
         )}
 
-        {expanded && !hasAnswer && (
+        {isExpanded && !hasAnswer && (
           <Alert variant='warning' className='mt-3'>
             No answer has been provided for this question yet. Click the Edit
             button to add an answer.
