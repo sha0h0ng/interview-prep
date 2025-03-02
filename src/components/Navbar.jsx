@@ -12,7 +12,7 @@ function Navbar({ onExport, onOpenClearModal }) {
     <BootstrapNavbar bg='dark' variant='dark' expand='lg'>
       <Container>
         <BootstrapNavbar.Brand as={Link} to='/'>
-          Interview Prep
+          Interview Star
         </BootstrapNavbar.Brand>
         <BootstrapNavbar.Toggle aria-controls='basic-navbar-nav' />
         <BootstrapNavbar.Collapse id='basic-navbar-nav'>
