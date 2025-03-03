@@ -10,7 +10,9 @@ function KeyboardNavigation({
   onClearFilters,
   onFocusSearch,
   onChangeSort,
-  onHelpToggle,
+  onShowModal,
+  onHideModal,
+  showModal,
   totalQuestions,
   searchInputRef,
 }) {
@@ -18,6 +20,27 @@ function KeyboardNavigation({
 
   const handleKeyDown = useCallback(
     (e) => {
+      // If modal is open, only handle Escape and e (Edit)
+      if (showModal) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          onHideModal();
+          return;
+        }
+
+        if (e.key === 'e') {
+          e.preventDefault();
+          onHideModal();
+          if (activeIndex >= 0 && activeIndex < totalQuestions) {
+            onEditQuestion(activeIndex);
+          }
+          return;
+        }
+
+        // Let other keypresses be handled by the modal
+        return;
+      }
+
       // Ctrl+F for search (common browser shortcut)
       if (e.ctrlKey && e.key === 'f') {
         e.preventDefault();
@@ -32,7 +55,7 @@ function KeyboardNavigation({
           document.activeElement.getAttribute('placeholder') ===
             'Search questions...')
       ) {
-        // Enter, Down Arrow, or Tab+Shift keys in search box - jump to first question
+        // Enter, Down Arrow, or Tab keys in search box - jump to first question
         if (
           (e.key === 'Enter' || e.key === 'ArrowDown' || e.key === 'Tab') &&
           !e.shiftKey
@@ -133,6 +156,14 @@ function KeyboardNavigation({
           }
           break;
 
+        case 'm':
+          // Show answer in modal
+          e.preventDefault();
+          if (activeIndex >= 0 && activeIndex < totalQuestions) {
+            onShowModal(activeIndex);
+          }
+          break;
+
         case '/':
           // Focus search
           e.preventDefault();
@@ -168,6 +199,9 @@ function KeyboardNavigation({
       setActiveIndex,
       onToggleAnswer,
       onEditQuestion,
+      onShowModal,
+      onHideModal,
+      showModal,
       onFocusSearch,
       onClearFilters,
       onChangeSort,
@@ -226,6 +260,12 @@ function KeyboardNavigation({
               </tr>
               <tr>
                 <td>
+                  <kbd>m</kbd>
+                </td>
+                <td>Show the answer in a modal window</td>
+              </tr>
+              <tr>
+                <td>
                   <kbd>e</kbd>
                 </td>
                 <td>Edit the selected question</td>
@@ -246,7 +286,7 @@ function KeyboardNavigation({
                 <td>
                   <kbd>Esc</kbd>
                 </td>
-                <td>Clear all filters</td>
+                <td>Close modal / Clear filters</td>
               </tr>
               <tr>
                 <td>
@@ -264,12 +304,11 @@ function KeyboardNavigation({
           </Table>
           <div className='d-flex flex-column align-items-center mt-3'>
             <Badge bg='info' className='mb-2'>
-              Search Workflow Tip
+              Modal View Tip
             </Badge>
             <small className='text-center'>
-              <kbd>Ctrl</kbd>+<kbd>F</kbd> → type search → <kbd>Enter</kbd> →
-              navigate with <kbd>↓</kbd>/<kbd>↑</kbd> → <kbd>Enter</kbd> to view
-              answer
+              Use <kbd>m</kbd> to open any question in a modal window for better
+              readability, then <kbd>Esc</kbd> to close it
             </small>
           </div>
         </Modal.Body>

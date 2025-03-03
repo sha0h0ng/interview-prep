@@ -2,13 +2,14 @@ import { useState, useRef, useEffect } from 'react';
 import { Alert } from 'react-bootstrap';
 import QuestionItem from './QuestionItem';
 import KeyboardNavigation from './KeyboardNavigation';
+import AnswerModal from './AnswerModal';
 import { useNavigate } from 'react-router-dom';
 
 function QuestionList({ questions, getQuestion, searchInputRef }) {
   const [activeIndex, setActiveIndex] = useState(-1);
   const [expandedStates, setExpandedStates] = useState({});
+  const [showModal, setShowModal] = useState(false);
   const questionRefs = useRef({});
-  const sortButtonRef = useRef(null);
   const navigate = useNavigate();
 
   // Reset active index when questions change
@@ -50,7 +51,7 @@ function QuestionList({ questions, getQuestion, searchInputRef }) {
       return;
     }
 
-    // Fallback: Get the search input from the document since it's not a direct child
+    // Fallback: Get the search input from the document
     const searchInput = document.querySelector(
       'input[placeholder="Search questions..."]'
     );
@@ -77,9 +78,21 @@ function QuestionList({ questions, getQuestion, searchInputRef }) {
     }
   };
 
-  // Toggle help dialog
-  const handleHelpToggle = () => {
-    // This will be implemented in the KeyboardNavigation component
+  // Handle showing modal
+  const handleShowModal = (index) => {
+    if (index >= 0 && index < questions.length) {
+      setActiveIndex(index);
+      setShowModal(true);
+    }
+  };
+
+  // Handle hiding modal
+  const handleHideModal = () => {
+    setShowModal(false);
+    // Refocus the active question after closing modal
+    setTimeout(() => {
+      questionRefs.current[activeIndex]?.focus();
+    }, 10);
   };
 
   if (questions.length === 0) {
@@ -89,6 +102,12 @@ function QuestionList({ questions, getQuestion, searchInputRef }) {
       </Alert>
     );
   }
+
+  // Get the active question for the modal
+  const activeQuestion =
+    activeIndex >= 0 && activeIndex < questions.length
+      ? questions[activeIndex]
+      : null;
 
   return (
     <div className='question-list'>
@@ -119,9 +138,19 @@ function QuestionList({ questions, getQuestion, searchInputRef }) {
         onFocusSearch={handleFocusSearch}
         onClearFilters={handleClearFilters}
         onChangeSort={handleChangeSort}
-        onHelpToggle={handleHelpToggle}
+        onShowModal={handleShowModal}
+        onHideModal={handleHideModal}
+        showModal={showModal}
         totalQuestions={questions.length}
         searchInputRef={searchInputRef}
+      />
+
+      {/* Answer Modal */}
+      <AnswerModal
+        show={showModal}
+        onHide={handleHideModal}
+        question={activeQuestion}
+        getQuestion={getQuestion}
       />
 
       <style jsx>{`

@@ -78,11 +78,11 @@ function QuestionItem({
           <div className='d-flex align-items-center'>
             {isActive && (
               <small className='text-muted me-2'>
-                <kbd>e</kbd> to edit
+                <kbd>m</kbd> modal view
                 {hasAnswer && (
                   <span>
                     {' '}
-                    | <kbd>Enter</kbd> to view
+                    | <kbd>Enter</kbd> to toggle
                   </span>
                 )}
               </small>
